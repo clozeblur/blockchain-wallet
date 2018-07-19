@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8"/>
+    <title>第一个HTML页面</title>
+</head>
+<body onload="setSomething()">
+<div id="page1" style="display: inline;">
+    <h2>请输出您的名称，点击确认后跳转至功能页（第一次输出默认创建用户）</h2>
+    <input style="width: 200px" type="text" id="username" th:value="${username}"/>
+    <button onclick="confirm()">确认</button>
+</div>
+<div id="page2" style="display: none;">
+    <h2>block chain</h2>
+    <p>区块链:</p>
+    <input style="width: 600px;" disabled type="text" id="firstBlockHash" th:value="${firstBlockHash}"/>
+    <button id="createBlock" onclick="createBlockChain()">创造区块链</button>
+    <br /> <br />
+    <h2>requestCoin</h2>
+    <p>申请</p> <input style="width: 200px" type="text" id="requestCoinValue"/> <p>枚硬币</p> <button onclick="requestCoin()">确定</button>
+    <br /> <br />
+    <h2>sendCoin</h2>
+    <p>转发</p> <input style="width: 200px" type="text" id="sendCoinValue"/> <p>枚硬币到</p>
+    <input style="width: 200px" type="text" id="receiver"/> <button onclick="sendCoin()">确定</button>
+    <br /> <br />
+    <h2>getBalance</h2>
+    <button onclick="getBalance()">查询余额</button>
+</div>
+
+<script>
+    function Ajax(type, url, data, success, failed){
+        // 创建ajax对象
+        var xhr = null;
+        if(window.XMLHttpRequest){
+            xhr = new XMLHttpRequest();
+        } else {
+            xhr = new ActiveXObject('Microsoft.XMLHTTP')
+        }
+
+        var typeUpperCase = type.toUpperCase();
+        // 用于清除缓存
+        var random = Math.random();
+
+        if(typeof data === 'object'){
+            var str = '';
+            for(var key in data){
+                str += key+'='+data[key]+'&';
+            }
+            data = str.replace(/&$/, '');
+        }
+
+        if(typeUpperCase === 'GET'){
+            if(data){
+                xhr.open('GET', url + '?' + data, true);
+            } else {
+                xhr.open('GET', url + '?t=' + random, true);
+            }
+            xhr.send();
+
+        } else if(typeUpperCase === 'POST'){
+            xhr.open('POST', url, true);
+            // 如果需要像 html 表单那样 POST 数据，请使用 setRequestHeader() 来添加 http 头。
+            xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+            xhr.send(data);
+        }
+
+        // 处理返回数据
+        xhr.onreadystatechange = function(){
+            if(xhr.readyState === 4){
+                if(xhr.status === 200){
+                    success(xhr.responseText);
+                } else {
+                    if(failed){
+                        failed(xhr.status);
+                    }
+                }
+            }
+        }
+    }
+
+    function setSomething() {
+        var username = document.getElementById("username").value;
+        var firstBlockHash = document.getElementById("firstBlockHash").value;
+        console.log(username);
+        console.log(firstBlockHash);
+        if (!isEmpty(username)) {
+            console.log("username不为空");
+            document.getElementById("page1").style.display="none";
+            document.getElementById("page2").style.display="inline";
+        }
+        if (isEmpty(firstBlockHash)) {
+            document.getElementById("createBlock").style.display="inline";
+            document.getElementById("firstBlockHash").style.display = "none";
+        } else {
+            document.getElementById("createBlock").style.display="none";
+            document.getElementById("firstBlockHash").style.display = "inline";
+        }
+    }
+
+    function createBlockChain() {
+        Ajax('get', '/wallet/createBlockchain', null, function (data) {
+            console.log(data);
+            window.location.reload();
+        }, function (error) {
+            console.log(error);
+        })
+    }
+
+    function confirm() {
+        var username = document.getElementById("username").value;
+        if (isEmpty(username)) {
+            alert("输出为空");
+            return;
+        }
+        var sendData = {username:username};
+        Ajax('get', '/wallet/confirmUsername', sendData, function(data){
+            if (!isEmpty(data)) {
+                console.log(data);
+                document.getElementById("page1").style.display="none";
+                document.getElementById("page2").style.display="inline";
+            } else {
+                alert("username已被注册");
+            }
+
+        }, function(error){
+            console.log(error);
+        });
+
+    }
+
+    function requestCoin() {
+        var requestCoinValue = document.getElementById("requestCoinValue").value;
+        if (isEmpty(requestCoinValue) || isNotDigit(requestCoinValue)) {
+            alert("输入请求不合法");
+        }
+        Ajax('get', '/wallet/requestCoin', {amount : requestCoinValue}, function (data) {
+            console.log(data);
+            getBalance();
+        }, function (error) {
+            console.log(error);
+        })
+    }
+    
+    function sendCoin() {
+        var sendCoinValue = document.getElementById("sendCoinValue").value;
+        if (isEmpty(sendCoinValue) || isNotDigit(sendCoinValue)) {
+            alert("输入请求不合法");
+        }
+        var receiver = document.getElementById("receiver").value;
+        if (isEmpty(receiver)) {
+            alert("接受者为空");
+        }
+        Ajax('get', '/wallet/send', {receiver : receiver, amount : sendCoinValue}, function (data) {
+            console.log(data);
+            getBalance();
+        }, function (error) {
+            console.log(error);
+        })
+    }
+
+    function getBalance() {
+        Ajax('get', '/wallet/getBalance', null, function (data) {
+            alert(data);
+        }, function (error) {
+            console.log(error);
+        })
+    }
+
+    function isEmpty(obj) {
+        return typeof obj === 'undefined' || obj == null || obj === '';
+    }
+
+    function isNotDigit(value) {
+        var pattern = /^[0-9]*$/;
+        return (pattern.exec(value) == null || value === "");
+    }
+</script>
+</body>
+</html>

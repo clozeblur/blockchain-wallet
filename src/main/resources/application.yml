@@ -1,0 +1,15 @@
+manager.url: ${MANAGER_URL:http://192.168.95.133:8888/}
+member.random: member/getRandom
+user.register: user/register
+
+wallet:
+  generateBlock: /wallet/generateBlock
+  checkBalance: /wallet/checkBalance
+  getLastBlockHash: /wallet/getLastBlockHash
+  doSend: /wallet/doSend
+  requestCoin: /wallet/requestCoin
+server.port: 12308
+
+spring:
+  thymeleaf:
+    prefix: classpath:/templates
