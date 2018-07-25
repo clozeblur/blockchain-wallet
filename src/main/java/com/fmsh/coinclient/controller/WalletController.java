@@ -1,28 +1,16 @@
 package com.fmsh.coinclient.controller;
 
 import cn.hutool.core.codec.Base64;
-import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fmsh.coinclient.bean.BaseData;
-import com.fmsh.coinclient.bean.UserData;
-import com.fmsh.coinclient.biz.block.Block;
-import com.fmsh.coinclient.biz.block.Operation;
-import com.fmsh.coinclient.biz.transaction.TXInput;
-import com.fmsh.coinclient.biz.transaction.Transaction;
 import com.fmsh.coinclient.biz.util.Base58Check;
 import com.fmsh.coinclient.biz.wallet.PairKeyPersist;
 import com.fmsh.coinclient.biz.wallet.Wallet;
 import com.fmsh.coinclient.biz.wallet.WalletUtils;
-import com.fmsh.coinclient.body.InstructionBody;
 import com.fmsh.coinclient.common.Const;
 import com.fmsh.coinclient.common.VoteAddressPersist;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPrivateKey;
-import org.bouncycastle.jce.ECNamedCurveTable;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.bouncycastle.jce.spec.ECParameterSpec;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -36,9 +24,6 @@ import org.springframework.web.client.RestTemplate;
 import javax.annotation.Resource;
 import java.io.*;
 import java.nio.charset.Charset;
-import java.security.*;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.*;
 
 /**
@@ -121,17 +106,6 @@ public class WalletController {
         return "";
     }
 
-    @GetMapping("/createBlockchain")
-    @ResponseBody
-    public String createBlockchain() throws Exception {
-        if (PairKeyPersist.getWalletMap().get("username") == null) {
-            return "您还没有初始化钱包";
-        }
-        Block block = createBlockchain(PairKeyPersist.getWalletMap().get("address"));
-        if (block == null) return "区块链已经被创造，无法被再次创建";
-        return block.getHash();
-    }
-
     @GetMapping("/getBalance")
     @ResponseBody
     public String getBalance() {
@@ -200,58 +174,6 @@ public class WalletController {
         return restTemplate.postForEntity(VoteAddressPersist.getVoteUrl() + requestCoin, generateRequest(data), String.class).getBody();
     }
 
-    @GetMapping("/testJson")
-    @ResponseBody
-    public String testJson() {
-        Wallet sender = WalletUtils.getInstance().getWallet(PairKeyPersist.getWalletMap().get("address"));
-        BCECPrivateKey privateKey = sender.getPrivateKey();
-        String privateKeyBase64 = Base64.encode(privateKey.getEncoded(), Charset.defaultCharset());
-        BCECPrivateKey privateKey2 = (BCECPrivateKey) bytesToSk(Base64.decode(privateKeyBase64, Charset.defaultCharset()));
-        return privateKeyBase64;
-    }
-
-    private PrivateKey bytesToSk(byte[] bytes) {
-        try {
-            // 注册 BC Provider
-            Security.addProvider(new BouncyCastleProvider());
-            KeyFactory keyFactory = KeyFactory.getInstance("ECDSA", BouncyCastleProvider.PROVIDER_NAME);
-            PKCS8EncodedKeySpec pKCS8EncodedKeySpec = new PKCS8EncodedKeySpec(bytes);
-            return keyFactory.generatePrivate(pKCS8EncodedKeySpec);
-            //Log.d("get",filename+"　;　"+privateKey.toString() );
-        } catch (Exception e) {
-            log.error("还原密钥异常");
-            throw new RuntimeException("还原密钥异常");
-        }
-    }
-
-    private Block createBlockchain(String address) throws Exception {
-        String lastBlockHash = restTemplate.getForEntity(VoteAddressPersist.getVoteUrl() + getLastBlockHash, String.class).getBody();
-
-        if (StringUtils.isNotBlank(lastBlockHash)) return null;
-        // 创建 coinBase 交易
-        String genesisCoinbaseData = "创世区块";
-        Transaction coinbaseTX = Transaction.newCoinbaseTX(address, genesisCoinbaseData);
-
-        return newBlock(coinbaseTX, genesisCoinbaseData, address);
-    }
-
-    private Block newBlock(Transaction transaction, String content, String address) throws Exception {
-        InstructionBody instructionBody = new InstructionBody();
-        instructionBody.setOperation(Operation.ADD);
-        instructionBody.setTable("message");
-        instructionBody.setJson("{\"content\":\"" + content + "\"}");
-
-        Wallet wallet = WalletUtils.getInstance().getWallet(address);
-        instructionBody.setPublicKey(Base64.encode(wallet.getPublicKey(), Charset.defaultCharset()));
-        instructionBody.setPrivateKey(Base64.encode(wallet.getPrivateKey().getEncoded(), Charset.defaultCharset()));
-
-        Map<String, Object> data = new HashMap<>();
-        data.put("instructionBody", instructionBody);
-        data.put("transaction", transaction);
-
-        return restTemplate.postForObject(VoteAddressPersist.getVoteUrl() + generateBlock, generateRequest(data), Block.class);
-    }
-
     private HttpEntity<String> generateRequest(Map<String, Object> data) {
         HttpHeaders headers = new HttpHeaders();
         MediaType type = MediaType.parseMediaType("application/json; charset=UTF-8");
@@ -265,34 +187,6 @@ public class WalletController {
         return new HttpEntity<>(jsonObj.toString(), headers);
     }
 
-    @GetMapping("/get")
-    @ResponseBody
-    public String get(String username, Integer amount) {
-//        InstructionBody instructionBody = new InstructionBody();
-//        instructionBody.setJson("111");
-//        instructionBody.setTable("1");
-//
-//        TXInput input = new TXInput();
-//        input.setTxOutputIndex(1);
-//        TXInput[] inputs = new TXInput[] {input};
-//        Transaction transaction = new Transaction();
-//        transaction.setCreateTime(100L);
-//        transaction.setInputs(inputs);
-
-        Map<String, Object> map = new HashMap<>();
-        map.put("username", username);
-        map.put("amount", amount);
-        return restTemplate.postForObject("http://127.0.0.1:12308/wallet/set", generateRequest(map), String.class);
-    }
-
-    @PostMapping("/set")
-    @ResponseBody
-    public String set(@RequestBody Map<String, Object> map) {
-        String username = String.valueOf(map.get("username"));
-        Integer amount = Integer.valueOf(String.valueOf(map.get("amount")));
-        return username + "+1 | " + String.valueOf(amount + 1);
-    }
-
     private void writeUserConfig() {
         try {
             PrintWriter writer = new PrintWriter(Const.USER_PROPERTIES, "UTF-8");
@@ -303,10 +197,5 @@ public class WalletController {
             log.error("创建本地用户信息文件失败");
         }
 
-    }
-
-    private String getAddress(String username) {
-        UserData receiverData = restTemplate.getForEntity(managerUrl + "user/getUser?username=" + username, UserData.class).getBody();
-        return receiverData.getUser().getAddress();
     }
 }
