@@ -35,7 +35,14 @@ public class VoteNodesConfig {
         if (memberData.getCode() == 0) {
             Member member = memberData.getMembers().get(0);
             VoteAddressPersist.setIp(member.getIp());
-            VoteAddressPersist.setPort(8084);
+            VoteAddressPersist.setPort(serverPort(member.getPort()));
         }
+    }
+
+    private Integer serverPort(Integer port) {
+        if (port == 11000) return 8081;
+        if (port == 12000) return 8082;
+        if (port == 13000) return 8083;
+        else return 8084;
     }
 }

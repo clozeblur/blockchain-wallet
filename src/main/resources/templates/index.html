@@ -14,7 +14,7 @@
     <h2>block chain</h2>
     <p>区块链:</p>
     <input style="width: 600px;" disabled type="text" id="firstBlockHash" th:value="${firstBlockHash}"/>
-    <button id="createBlock" onclick="createBlockChain()">创造区块链</button>
+    <h3 id="createBlock">区块链尚未被创造，请联系管理员</h3>
     <br /> <br />
     <h2>requestCoin</h2>
     <p>申请</p> <input style="width: 200px" type="text" id="requestCoinValue"/> <p>枚硬币</p> <button onclick="requestCoin()">确定</button>
@@ -97,14 +97,14 @@
         }
     }
 
-    function createBlockChain() {
-        Ajax('get', '/wallet/createBlockchain', null, function (data) {
-            console.log(data);
-            window.location.reload();
-        }, function (error) {
-            console.log(error);
-        })
-    }
+    // function createBlockChain() {
+    //     Ajax('get', '/wallet/createBlockchain', null, function (data) {
+    //         console.log(data);
+    //         window.location.reload();
+    //     }, function (error) {
+    //         console.log(error);
+    //     })
+    // }
 
     function confirm() {
         var username = document.getElementById("username").value;
