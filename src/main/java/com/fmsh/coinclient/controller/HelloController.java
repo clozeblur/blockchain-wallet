@@ -17,7 +17,7 @@ import java.util.HashMap;
  * @Description:
  */
 @Controller
-@RequestMapping("/test")
+@RequestMapping("/html")
 public class HelloController {
 
     @Resource
@@ -28,6 +28,11 @@ public class HelloController {
         String firstBlockHash = restTemplate.getForEntity(VoteAddressPersist.getVoteUrl() + "/wallet/getFirstBlockHash", String.class).getBody();
         map.put("firstBlockHash", StringUtils.isBlank(firstBlockHash) ? "" : firstBlockHash);
         map.put("username", PairKeyPersist.getWalletMap().get("username"));
+        map.put("address", PairKeyPersist.getWalletMap().get("address"));
+//
+//        map.put("firstBlockHash", "test-block-hash");
+//        map.put("username", "alice");
+//        map.put("address", "test-address");
         return "/index";
     }
 }

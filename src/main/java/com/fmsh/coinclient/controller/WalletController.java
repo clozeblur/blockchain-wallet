@@ -57,6 +57,9 @@ public class WalletController {
     @Value("${wallet.requestCoin}")
     private String requestCoin;
 
+    @Value("${wallet.queryRelatedBlocks}")
+    private String queryRelatedBlocks;
+
     @Resource
     private RestTemplate restTemplate;
 
@@ -161,6 +164,10 @@ public class WalletController {
     @GetMapping("/requestCoin")
     @ResponseBody
     public String requestCoin(Integer amount) {
+        if (amount < 1) {
+            log.error("ERROR: amount invalid ! amount=" + amount);
+            throw new RuntimeException("ERROR: amount invalid ! amount=" + amount);
+        }
         Wallet sender = WalletUtils.getInstance().getWallet(PairKeyPersist.getWalletMap().get("address"));
 
         Map<String, Object> data = new HashMap<>();
@@ -172,6 +179,21 @@ public class WalletController {
         data.put("sk", Base64.encode(sender.getPrivateKey().getEncoded(), Charset.defaultCharset()));
         data.put("amount", amount);
         return restTemplate.postForEntity(VoteAddressPersist.getVoteUrl() + requestCoin, generateRequest(data), String.class).getBody();
+    }
+
+    @GetMapping("/queryHistory")
+    @ResponseBody
+    public String queryHistory() {
+        Wallet sender = WalletUtils.getInstance().getWallet(PairKeyPersist.getWalletMap().get("address"));
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("username", PairKeyPersist.getWalletMap().get("username"));
+
+        byte[] pk = sender.getPublicKey();
+        String pkString = Base64.encode(pk, Charset.defaultCharset());
+        data.put("pk", pkString);
+
+        return restTemplate.postForEntity(VoteAddressPersist.getVoteUrl() + queryRelatedBlocks, generateRequest(data), String.class).getBody();
     }
 
     private HttpEntity<String> generateRequest(Map<String, Object> data) {
