@@ -17,40 +17,7 @@
         line-height: 1.5;
     }
 
-    .div1 {
-        width: 200em;
-        height: 20em;
-        background: tan;
-        border-radius: .8em;
-        padding: 1em;
-        box-shadow: 0 0 0 .6em #655;
-        outline: .6em solid #655;
-        float: left;
-    }
-
-    .div2 {
-        width: 200em;
-        height: 20em;
-        background: tan;
-        border-radius: .8em;
-        padding: 1em;
-        box-shadow: 0 0 0 .6em #655;
-        outline: .6em solid #655;
-        float: left;
-    }
-
-    .div3 {
-        width: 200em;
-        height: 20em;
-        background: tan;
-        border-radius: .8em;
-        padding: 1em;
-        box-shadow: 0 0 0 .6em #655;
-        outline: .6em solid #655;
-        float: left;
-    }
-
-    .div4 {
+    .box {
         width: 200em;
         height: 20em;
         background: tan;
@@ -68,7 +35,7 @@
     <button onclick="confirm()">确认</button>
 </div>
 <div id="page2" style="display: none;">
-    <div class="div1">
+    <div class="box">
         <h2>block chain</h2>
         <p>区块链:</p>
         <input style="width: 600px;" disabled type="text" id="firstBlockHash" th:value="${firstBlockHash}"/>
@@ -80,20 +47,25 @@
         <input style="width: 600px;" disabled type="text" id="registeredAddress" th:value="${address}"/>
     </div>
 
-    <div class="div2">
+    <div class="box">
         <h2>requestCoin</h2>
         <p>申请</p> <input style="width: 200px" type="text" id="requestCoinValue"/> <p>枚硬币</p> <button onclick="requestCoin()">确定</button>
     </div>
 
-    <div class="div3" style="border: darkkhaki 2px solid">
+    <div class="box" style="border: darkkhaki 2px solid">
         <h2>sendCoin</h2>
         <p>转发</p> <input style="width: 200px" type="text" id="sendCoinValue"/> <p>枚硬币到</p>
         <input style="width: 200px" type="text" id="receiver"/> <button onclick="sendCoin()">确定</button>
     </div>
 
-    <div class="div4" style="border: slategray 2px solid">
+    <div class="box" style="border: slategray 2px solid">
         <h2>getBalance</h2>
         <button onclick="getBalance()">查询余额</button>
+    </div>
+
+    <div class="box" style="border: slategray 2px solid">
+        <h2>queryHistory</h2>(请打开console面板查看数据，可以粘贴至"https://json.cn/"网站查看结果)
+        <button onclick="queryHistory()">查询历史Block</button>
     </div>
 </div>
 <script>
@@ -196,7 +168,8 @@
         }
         Ajax('get', '/wallet/requestCoin', {amount : requestCoinValue}, function (data) {
             console.log(data);
-            getBalance();
+            alert("请求成功");
+            // getBalance();
         }, function (error) {
             console.log(error);
         })
@@ -213,7 +186,8 @@
         }
         Ajax('get', '/wallet/send', {receiver : receiver, amount : sendCoinValue}, function (data) {
             console.log(data);
-            getBalance();
+            alert("发送成功");
+            // getBalance();
         }, function (error) {
             console.log(error);
         })
@@ -222,6 +196,14 @@
     function getBalance() {
         Ajax('get', '/wallet/getBalance', null, function (data) {
             alert(data);
+        }, function (error) {
+            console.log(error);
+        })
+    }
+
+    function queryHistory() {
+        Ajax('get', '/wallet/queryHistory', null, function (data) {
+            console.log(data);
         }, function (error) {
             console.log(error);
         })
