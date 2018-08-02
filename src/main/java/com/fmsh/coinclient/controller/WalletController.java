@@ -60,6 +60,9 @@ public class WalletController {
     @Value("${wallet.queryRelatedBlocks}")
     private String queryRelatedBlocks;
 
+    @Value("${wallet.queryAllBlocks}")
+    private String queryAllBlocks;
+
     @Resource
     private RestTemplate restTemplate;
 
@@ -194,6 +197,24 @@ public class WalletController {
         data.put("pk", pkString);
 
         return restTemplate.postForEntity(VoteAddressPersist.getVoteUrl() + queryRelatedBlocks, generateRequest(data), String.class).getBody();
+    }
+
+    @GetMapping("/queryAllBlocks")
+    @ResponseBody
+    public String queryAllBlocks() {
+        return restTemplate.getForEntity(VoteAddressPersist.getVoteUrl() + queryAllBlocks, String.class).getBody();
+    }
+
+    @GetMapping("/listUsers")
+    @ResponseBody
+    public String listUsers() {
+        return restTemplate.getForEntity(managerUrl + "user/listUsers", String.class).getBody();
+    }
+
+    @GetMapping("/getLeader")
+    @ResponseBody
+    public String getLeader() {
+        return restTemplate.getForEntity(managerUrl + "member/getLeader", String.class).getBody();
     }
 
     private HttpEntity<String> generateRequest(Map<String, Object> data) {

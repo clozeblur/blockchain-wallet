@@ -1,6 +1,8 @@
 package com.fmsh.coinclient.controller;
 
+import cn.hutool.core.codec.Base64;
 import com.fmsh.coinclient.biz.wallet.PairKeyPersist;
+import com.fmsh.coinclient.biz.wallet.WalletUtils;
 import com.fmsh.coinclient.common.VoteAddressPersist;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Controller;
@@ -9,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.Resource;
+import java.nio.charset.Charset;
 import java.util.HashMap;
 
 /**
@@ -29,10 +32,12 @@ public class HelloController {
         map.put("firstBlockHash", StringUtils.isBlank(firstBlockHash) ? "" : firstBlockHash);
         map.put("username", PairKeyPersist.getWalletMap().get("username"));
         map.put("address", PairKeyPersist.getWalletMap().get("address"));
-//
+        map.put("pubKey", Base64.encode(WalletUtils.getInstance().getWallet(PairKeyPersist.getWalletMap().get("address")).getPublicKey(), Charset.defaultCharset()));
+
 //        map.put("firstBlockHash", "test-block-hash");
 //        map.put("username", "alice");
 //        map.put("address", "test-address");
+//        map.put("pubKey", "pubKey");
         return "/index";
     }
 }

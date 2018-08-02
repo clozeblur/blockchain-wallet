@@ -18,7 +18,7 @@
     }
 
     .box {
-        width: 200em;
+        width: 120em;
         height: 20em;
         background: tan;
         border-radius: .8em;
@@ -45,6 +45,8 @@
         <input style="width: 600px;" disabled type="text" id="registeredUsername" th:value="${username}"/>
         <p>地址:</p>
         <input style="width: 600px;" disabled type="text" id="registeredAddress" th:value="${address}"/>
+        <p>公钥base64</p>
+        <input style="width: 600px;" disabled type="text" id="pubKey" th:value="${pubKey}"/>
     </div>
 
     <div class="box">
@@ -59,13 +61,41 @@
     </div>
 
     <div class="box" style="border: slategray 2px solid">
-        <h2>getBalance</h2>
-        <button onclick="getBalance()">查询余额</button>
+        <h2>listUsers</h2>
+        <button onclick="listUsers()">查询所有用户</button>
+        <p id="allUsers"></p>
     </div>
 
     <div class="box" style="border: slategray 2px solid">
-        <h2>queryHistory</h2>(请打开console面板查看数据，可以粘贴至"https://json.cn/"网站查看结果)
-        <button onclick="queryHistory()">查询历史Block</button>
+        <h2>getLeader</h2>
+        <button onclick="getLeader()">查询leader节点</button>
+        <p id="leader"></p>
+    </div>
+
+    <div class="box" style="border: slategray 2px solid">
+        <h2>getBalance</h2>
+        <button onclick="getBalance()">查询余额</button>
+        <p id="balance"></p>
+    </div>
+
+    <div class="box" style="border: slategray 2px solid">
+        <div style="float: left">
+            <h2>queryHistory</h2>
+            <button onclick="queryHistory()">查询历史Block</button>
+        </div>
+        <div style="text-align: center">
+            <textarea id="history" disabled style="width:1200px;height:300px;overflow:scroll; font-size: 15px"></textarea>
+        </div>
+    </div>
+
+    <div class="box" style="border: slategray 2px solid">
+        <div style="float: left">
+            <h2>queryAllBlocks</h2>
+            <button onclick="queryAllBlocks()">查询所有blocks</button>
+        </div>
+        <div style="text-align: center">
+            <textarea id="allBlocks" disabled style="width:1200px;height:300px;overflow:scroll; font-size: 15px"></textarea>
+        </div>
     </div>
 </div>
 <script>
@@ -169,7 +199,6 @@
         Ajax('get', '/wallet/requestCoin', {amount : requestCoinValue}, function (data) {
             console.log(data);
             alert("请求成功");
-            // getBalance();
         }, function (error) {
             console.log(error);
         })
@@ -187,7 +216,6 @@
         Ajax('get', '/wallet/send', {receiver : receiver, amount : sendCoinValue}, function (data) {
             console.log(data);
             alert("发送成功");
-            // getBalance();
         }, function (error) {
             console.log(error);
         })
@@ -195,7 +223,8 @@
 
     function getBalance() {
         Ajax('get', '/wallet/getBalance', null, function (data) {
-            alert(data);
+            var p = document.getElementById("balance");
+            p.innerText = data;
         }, function (error) {
             console.log(error);
         })
@@ -203,7 +232,33 @@
 
     function queryHistory() {
         Ajax('get', '/wallet/queryHistory', null, function (data) {
-            console.log(data);
+            document.getElementById("history").value = data;
+        }, function (error) {
+            console.log(error);
+        })
+    }
+
+    function queryAllBlocks() {
+        Ajax('get', '/wallet/queryAllBlocks', null, function (data) {
+            document.getElementById("allBlocks").value = data;
+        }, function (error) {
+            console.log(error);
+        })
+    }
+
+    function listUsers() {
+        Ajax('get', '/wallet/listUsers', null, function (data) {
+            var p = document.getElementById("allUsers");
+            p.innerHTML = data;
+        }, function (error) {
+            console.log(error);
+        })
+    }
+
+    function getLeader() {
+        Ajax('get', '/wallet/getLeader', null, function (data) {
+            var p = document.getElementById("leader");
+            p.innerText = data;
         }, function (error) {
             console.log(error);
         })

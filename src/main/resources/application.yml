@@ -9,6 +9,7 @@ wallet:
   doSend: /wallet/doSend
   requestCoin: /wallet/requestCoin
   queryRelatedBlocks: /wallet/queryRelatedBlocks
+  queryAllBlocks: /wallet/queryAllBlocks
 server.port: 12308
 
 spring:
