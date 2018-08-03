@@ -32,7 +32,11 @@ public class HelloController {
         map.put("firstBlockHash", StringUtils.isBlank(firstBlockHash) ? "" : firstBlockHash);
         map.put("username", PairKeyPersist.getWalletMap().get("username"));
         map.put("address", PairKeyPersist.getWalletMap().get("address"));
-        map.put("pubKey", Base64.encode(WalletUtils.getInstance().getWallet(PairKeyPersist.getWalletMap().get("address")).getPublicKey(), Charset.defaultCharset()));
+        String pubKey = "";
+        if (StringUtils.isNotBlank(PairKeyPersist.getWalletMap().get("address"))) {
+            pubKey = Base64.encode(WalletUtils.getInstance().getWallet(PairKeyPersist.getWalletMap().get("address")).getPublicKey(), Charset.defaultCharset());
+        }
+        map.put("pubKey", StringUtils.isBlank(pubKey) ? "" : pubKey);
 
 //        map.put("firstBlockHash", "test-block-hash");
 //        map.put("username", "alice");

@@ -1,8 +1,10 @@
 package com.fmsh.coinclient.controller;
 
 import cn.hutool.core.codec.Base64;
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.fmsh.coinclient.bean.BaseData;
+import com.fmsh.coinclient.bean.User;
 import com.fmsh.coinclient.biz.util.Base58Check;
 import com.fmsh.coinclient.biz.wallet.PairKeyPersist;
 import com.fmsh.coinclient.biz.wallet.Wallet;
@@ -25,6 +27,7 @@ import javax.annotation.Resource;
 import java.io.*;
 import java.nio.charset.Charset;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @Author: yuanjiaxin
@@ -208,13 +211,20 @@ public class WalletController {
     @GetMapping("/listUsers")
     @ResponseBody
     public String listUsers() {
-        return restTemplate.getForEntity(managerUrl + "user/listUsers", String.class).getBody();
+        List<User> users = JSONArray.parseArray(restTemplate.getForEntity(managerUrl + "user/listUsers", String.class).getBody(), User.class);
+        return JSONObject.toJSONString(users.stream().map(User::getUsername).collect(Collectors.toList()));
     }
 
     @GetMapping("/getLeader")
     @ResponseBody
     public String getLeader() {
         return restTemplate.getForEntity(managerUrl + "member/getLeader", String.class).getBody();
+    }
+
+    @GetMapping("/getVoteUrl")
+    @ResponseBody
+    public String getVoteUrl() {
+        return VoteAddressPersist.getVoteUrl();
     }
 
     private HttpEntity<String> generateRequest(Map<String, Object> data) {
