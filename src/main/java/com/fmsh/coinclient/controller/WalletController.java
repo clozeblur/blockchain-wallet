@@ -139,7 +139,7 @@ public class WalletController {
 
     @GetMapping("/send")
     @ResponseBody
-    public String send(String receiver, Integer amount) {
+    public String send(String receiver, Long amount) {
         String from = PairKeyPersist.getWalletMap().get("address");
         // 检查钱包地址是否合法
         try {
@@ -149,7 +149,7 @@ public class WalletController {
             throw new RuntimeException("ERROR: sender address invalid ! address=" + from, e);
         }
 
-        if (amount < 1) {
+        if (amount < 1 || amount > (Long.MAX_VALUE - 1) / 2) {
             log.error("ERROR: amount invalid ! amount=" + amount);
             throw new RuntimeException("ERROR: amount invalid ! amount=" + amount);
         }
@@ -169,8 +169,8 @@ public class WalletController {
 
     @GetMapping("/requestCoin")
     @ResponseBody
-    public String requestCoin(Integer amount) {
-        if (amount < 1) {
+    public String requestCoin(Long amount) {
+        if (amount < 1 || amount > (Long.MAX_VALUE - 1) / 2) {
             log.error("ERROR: amount invalid ! amount=" + amount);
             throw new RuntimeException("ERROR: amount invalid ! amount=" + amount);
         }

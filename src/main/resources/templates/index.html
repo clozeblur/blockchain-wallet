@@ -63,12 +63,14 @@
     <div class="box">
         <h2>requestCoin</h2>
         <p>申请</p> <input style="width: 200px" type="text" id="requestCoinValue"/> <p>枚硬币</p> <button onclick="requestCoin()">确定</button>
+        <p id="requestCoinP"></p>
     </div>
 
     <div class="box" style="border: darkkhaki 2px solid">
         <h2>sendCoin</h2>
         <p>转发</p> <input style="width: 200px" type="text" id="sendCoinValue"/> <p>枚硬币到</p>
         <input style="width: 200px" type="text" id="receiver"/> <button onclick="sendCoin()">确定</button>
+        <p id="sendCoinP"></p>
     </div>
 
     <div class="box" style="border: slategray 2px solid">
@@ -209,7 +211,8 @@
         }
         Ajax('get', '/wallet/requestCoin', {amount : requestCoinValue}, function (data) {
             console.log(data);
-            alert("请求成功");
+            var p = document.getElementById("requestCoinP");
+            p.innerText = data;
         }, function (error) {
             console.log(error);
         })
@@ -226,7 +229,8 @@
         }
         Ajax('get', '/wallet/send', {receiver : receiver, amount : sendCoinValue}, function (data) {
             console.log(data);
-            alert("发送成功");
+            var p = document.getElementById("sendCoinP");
+            p.innerText = data;
         }, function (error) {
             console.log(error);
         })
