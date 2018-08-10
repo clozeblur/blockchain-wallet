@@ -31,12 +31,14 @@ public class VoteNodesConfig {
 
     @Scheduled(fixedDelay = 60*1000)
     public void checkNodes() {
-        MemberData memberData = restTemplate.getForEntity(managerUrl + memberRandom, MemberData.class).getBody();
-        if (memberData.getCode() == 0) {
-            Member member = memberData.getMembers().get(0);
-            VoteAddressPersist.setIp(member.getIp());
-            VoteAddressPersist.setPort(serverPort(member.getPort()));
-        }
+//        MemberData memberData = restTemplate.getForEntity(managerUrl + memberRandom, MemberData.class).getBody();
+//        if (memberData.getCode() == 0) {
+//            Member member = memberData.getMembers().get(0);
+//            VoteAddressPersist.setIp(member.getIp());
+//            VoteAddressPersist.setPort(serverPort(member.getPort()));
+//        }
+        VoteAddressPersist.setIp("192.168.95.133");
+        VoteAddressPersist.setPort(serverPort(14000));
     }
 
     private Integer serverPort(Integer port) {

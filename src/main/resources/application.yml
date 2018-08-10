@@ -1,5 +1,6 @@
 manager.url: ${MANAGER_URL:http://192.168.95.133:8888/}
 member.random: member/getRandom
+member.leader: member/getLeader
 user.register: user/register
 
 wallet:

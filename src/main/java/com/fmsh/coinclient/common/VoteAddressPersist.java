@@ -9,9 +9,9 @@ public class VoteAddressPersist {
 
     private VoteAddressPersist() {}
 
-    private static String ip;
+    private static volatile String ip;
 
-    private static Integer port;
+    private static volatile Integer port;
 
     public static void setIp(String ip) {
         VoteAddressPersist.ip = ip;
