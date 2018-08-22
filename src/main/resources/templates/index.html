@@ -233,12 +233,15 @@
             p.innerText = data;
         }, function (error) {
             console.log(error);
-        })
+        });
+        document.getElementById("sendCoinValue").value = "";
+        document.getElementById("receiver").value = "";
     }
 
     function getBalance() {
+        var p = document.getElementById("balance");
+        p.innerText = "";
         Ajax('get', '/wallet/getBalance', null, function (data) {
-            var p = document.getElementById("balance");
             p.innerText = data;
         }, function (error) {
             console.log(error);
@@ -262,8 +265,9 @@
     }
 
     function listUsers() {
+        var p = document.getElementById("allUsers");
+        p.innerHTML = "";
         Ajax('get', '/wallet/listUsers', null, function (data) {
-            var p = document.getElementById("allUsers");
             p.innerHTML = data;
         }, function (error) {
             console.log(error);

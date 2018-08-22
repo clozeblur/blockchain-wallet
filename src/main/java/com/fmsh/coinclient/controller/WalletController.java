@@ -27,7 +27,6 @@ import javax.annotation.Resource;
 import java.io.*;
 import java.nio.charset.Charset;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
@@ -75,97 +74,23 @@ public class WalletController {
         PairKeyPersist.setWalletMap(new HashMap<>());
     }
 
-//    @GetMapping("/confirmUsername")
-//    public String confirmUsername(String username) {
-//        if (StringUtils.isBlank(username)) {
-//            return "";
-//        }
-//        if (CollectionUtils.isEmpty(PairKeyPersist.getWalletMap()) || !PairKeyPersist.getWalletMap().get("username").equals(username)) {
-//            return register(username);
-//        }
-//        return PairKeyPersist.getWalletMap().get("address");
-//    }
-
-    @GetMapping("/test")
-    public void test() {
-        // step1. create main node
-        Wallet mainWallet = createNode("main");
-        if (mainWallet == null) return;
-
-        Map<String, WalletData> walletMap = new ConcurrentHashMap<>();
-        WalletData mainData = walletToData(mainWallet);
-        mainData.setUsername("main");
-        walletMap.put("main", mainData);
-
-        log.info("main address : {}", mainWallet.getAddress());
-        requestCoinWallet(mainWallet, "main", 1000000L);
-
-        // step2. create normal nodes and send coin from main to these nodes
-        for (int i = 0; i < 1000; i++) {
-            preWork(i, walletMap);
+    @GetMapping("/confirmUsername")
+    public String confirmUsername(String username) {
+        if (StringUtils.isBlank(username)) {
+            return "";
         }
-
-        System.out.println(walletMap.get("main").getAddress());
-        String mainBalance = checkUsernameBalance(walletMap, "main");
-        if (Long.valueOf(mainBalance) <= 1000L) {
-            return;
+        if (CollectionUtils.isEmpty(PairKeyPersist.getWalletMap()) || !PairKeyPersist.getWalletMap().get("username").equals(username)) {
+            return register(username);
         }
-
-        log.info("==========================================================");
-        log.info("==========================================================");
-        log.info("预注册结束");
-
-        List<Thread> threads = new ArrayList<>();
-        for (int i = 0; i < 10; i++) {
-            Thread th = createMainThread(i, walletMap);
-            th.start();
-            threads.add(th);
-        }
-        for (Thread th : threads) {
-            try {
-                th.join();
-            } catch (InterruptedException ignored) {
-            }
-        }
-
-        log.info("complete init, please wait 3 seconds");
-        try {
-            Thread.sleep(3000);
-        } catch (InterruptedException ignored) {
-        }
-
-        log.info("wait end");
-        log.info("==========================================================");
-        log.info("==========================================================");
-
-        // step3. send coins between nodes
-//        List<Thread> threadList = new ArrayList<>();
-//        for (int i = 0; i < 10; i++) {
-//            Thread th = createNormalThread(i, walletMap);
-//            th.start();
-//            threadList.add(th);
-//        }
-//        for (Thread th : threadList) {
-//            try {
-//                th.join();
-//            } catch (InterruptedException ignored) {
-//            }
-//        }
-        log.info("==================================================================");
-        log.info("task end...");
+        return PairKeyPersist.getWalletMap().get("address");
     }
 
-    private void requestCoinWallet(Wallet wallet, String username, Long amount) {
-        Map<String, Object> data = new HashMap<>();
-        data.put("username", username);
-        data.put("pk", Base64.encode(wallet.getPublicKey(), Charset.defaultCharset()));
-        data.put("sk", Base64.encode(wallet.getPrivateKey().getEncoded(), Charset.defaultCharset()));
-        data.put("amount", amount);
-        String hash = restTemplate.postForEntity(VoteAddressPersist.getVoteUrl() + requestCoin, generateRequest(data), String.class).getBody();
-        log.info("{} request Coin, hash: {}", username, hash);
-    }
-
-    private Wallet createNode(String username) {
+    @GetMapping("/init")
+    @ResponseBody
+    public String register(String username) {
+        if (StringUtils.isEmpty(username)) {
+            return "";
+        }
         Wallet wallet = WalletUtils.getInstance().createWallet();
         String address = wallet.getAddress();
 
@@ -179,144 +104,16 @@ public class WalletController {
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(map, headers);
 
         BaseData base = restTemplate.postForObject(managerUrl + "user/register", request, BaseData.class);
-        if (base.getCode() != 0) {
-            log.error("{} node register error!", username);
-            return null;
+        if (base.getCode() == 0) {
+            Map<String, String> walletMap = new HashMap<>();
+            walletMap.put("username", username);
+            walletMap.put("address", address);
+            PairKeyPersist.setWalletMap(walletMap);
+            writeUserConfig();
+            return PairKeyPersist.getWalletMap().get("address");
         }
-        return wallet;
+        return "";
     }
-
-    private void preWork(Integer count, Map<String, WalletData> walletMap) {
-        String username = String.valueOf(count);
-        Wallet wallet = createNode(username);
-        if (wallet == null) {
-            log.error("{} node create fail");
-            return;
-        }
-        WalletData data = walletToData(wallet);
-        data.setUsername(username);
-
-        walletMap.put(username, data);
-        log.info("=========================================成功注册: {}", username);
-    }
-
-    private WalletData walletToData(Wallet wallet) {
-        WalletData data = new WalletData();
-        data.setAddress(wallet.getAddress());
-        data.setPk(Base64.encode(wallet.getPublicKey(), Charset.defaultCharset()));
-        data.setSk(Base64.encode(wallet.getPrivateKey().getEncoded(), Charset.defaultCharset()));
-        return data;
-    }
-
-    private static class WalletData {
-        private String username;
-        private String address;
-        private String pk;
-        private String sk;
-
-        public String getUsername() {
-            return username;
-        }
-
-        public void setUsername(String username) {
-            this.username = username;
-        }
-
-        public String getAddress() {
-            return address;
-        }
-
-        public void setAddress(String address) {
-            this.address = address;
-        }
-
-        public String getPk() {
-            return pk;
-        }
-
-        public void setPk(String pk) {
-            this.pk = pk;
-        }
-
-        public String getSk() {
-            return sk;
-        }
-
-        public void setSk(String sk) {
-            this.sk = sk;
-        }
-    }
-
-    private String checkUsernameBalance(Map<String, WalletData> walletMap, String username) {
-        WalletData walletData = walletMap.get(username);
-        Map<String, Object> data = new HashMap<>();
-        data.put("address", walletData.getAddress());
-        String balance = restTemplate.postForEntity(VoteAddressPersist.getVoteUrl() + checkBalance, generateRequest(data), String.class).getBody();
-        log.info("{} balance is: {}", username, balance);
-        return balance;
-    }
-
-    private Thread createMainThread(Integer count, Map<String, WalletData> walletMap) {
-        return new Thread(() -> {
-            for (int i = 100*count; i < 100*(count + 1); i++) {
-                log.info("from: {} ===========> to: {}", "main", String.valueOf(i));
-                sendFromTo("main", String.valueOf(i), 1000L, walletMap);
-                sendFromTo(String.valueOf(i), "main", 1L, walletMap);
-            }
-        });
-    }
-
-//    private Thread createNormalThread(Integer senderCount, Map<String, WalletData> walletMap) {
-//        return new Thread(() -> {
-//            for (int i = 100*senderCount; i < 100*(senderCount + 1); i++) {
-//                log.info("from: {} ===========> to: {}", String.valueOf(i), "main");
-//                sendFromTo(String.valueOf(i), "main", 1L, walletMap);
-//            }
-//        });
-//    }
-
-    private void sendFromTo(String sender, String receiver, Long amount, Map<String, WalletData> walletMap) {
-        WalletData senderWallet = walletMap.get(sender);
-        Map<String, Object> data = new HashMap<>();
-        data.put("sender", sender);
-        data.put("receiver", receiver);
-        data.put("pk", senderWallet.getPk());
-        data.put("sk", senderWallet.getSk());
-        data.put("amount", amount);
-
-        restTemplate.postForEntity(VoteAddressPersist.getVoteUrl() + doSend, generateRequest(data), String.class).getBody();
-        log.info("{} node send {} coins to {} node", sender, amount, receiver);
-    }
-
-//    @GetMapping("/init")
-//    @ResponseBody
-//    public String register(String username) {
-//        if (StringUtils.isEmpty(username)) {
-//            return "";
-//        }
-//        Wallet wallet = WalletUtils.getInstance().createWallet();
-//        String address = wallet.getAddress();
-//
-//        HttpHeaders headers = new HttpHeaders();
-//        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-//
-//        MultiValueMap<String, String> map= new LinkedMultiValueMap<>();
-//        map.add("username", username);
-//        map.add("address", address);
-//
-//        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(map, headers);
-//
-//        BaseData base = restTemplate.postForObject(managerUrl + "user/register", request, BaseData.class);
-//        if (base.getCode() == 0) {
-//            Map<String, String> walletMap = new HashMap<>();
-//            walletMap.put("username", username);
-//            walletMap.put("address", address);
-//            PairKeyPersist.setWalletMap(walletMap);
-//            writeUserConfig();
-//            return PairKeyPersist.getWalletMap().get("address");
-//        }
-//        return "";
-//    }
 
     @GetMapping("/getBalance")
     @ResponseBody

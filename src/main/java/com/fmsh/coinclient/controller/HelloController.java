@@ -37,11 +37,6 @@ public class HelloController {
             pubKey = Base64.encode(WalletUtils.getInstance().getWallet(PairKeyPersist.getWalletMap().get("address")).getPublicKey(), Charset.defaultCharset());
         }
         map.put("pubKey", StringUtils.isBlank(pubKey) ? "" : pubKey);
-
-//        map.put("firstBlockHash", "test-block-hash");
-//        map.put("username", "alice");
-//        map.put("address", "test-address");
-//        map.put("pubKey", "pubKey");
         return "/index";
     }
 }

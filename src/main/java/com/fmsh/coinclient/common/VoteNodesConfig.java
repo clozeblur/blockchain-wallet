@@ -37,7 +37,7 @@ public class VoteNodesConfig {
 //            VoteAddressPersist.setIp(member.getIp());
 //            VoteAddressPersist.setPort(serverPort(member.getPort()));
 //        }
-        VoteAddressPersist.setIp("192.168.95.133");
+        VoteAddressPersist.setIp("192.168.95.131");
         VoteAddressPersist.setPort(serverPort(14000));
     }
 
